@@ -6,6 +6,8 @@
  * Licensed under Apache-2.0 License
  */
 
+/* globals MashupPlatform, StyledElements*/
+
 import {
     Cartesian3,
     Cesium3DTileStyle,
@@ -232,6 +234,24 @@ CesiumJs.prototype.init = function init() {
     };
     MashupPlatform.mashup.context.registerCallback(update_ui_buttons);
     update_ui_buttons({editing: MashupPlatform.mashup.context.get('editing')});
+
+    // Create a table mapping class name to unicode.
+    this.glyphTable = {};
+    for (let i = 0; i < window.top.document.styleSheets.length; i++) {
+        const sheet = document.styleSheets[i];
+        if (sheet && 'href' in sheet && sheet.href != null
+            && sheet.href.endsWith('fontawesome.min.css')) {
+            const before = '::before';
+            for (let i = 0; i < sheet.cssRules.length; i++) {
+                const cssRule = sheet.cssRules[i];
+                if (cssRule.selectorText && cssRule.selectorText.endsWith(before)) {
+                    // const ctx = '\\u' + cssRule.style.content.replace(/'|"/g, '').charCodeAt(0).toString(16);
+                    const ctx = cssRule.style.content.slice(1).slice(0, -1);
+                    this.glyphTable[cssRule.selectorText.slice(1).slice(0, -1 * before.length)] = ctx;
+                }
+            }
+        }
+    }
 }
 
 CesiumJs.prototype.addLayer = function addLayer(command_info) {
@@ -341,13 +361,63 @@ const removePoi = function removePoi(poi) {
     }
 }
 
+const fontAwesomeIcon = function fontAwesomeIcon(style) {
+    const unicode = this.glyphTable[style.glyph];
+
+    const canvas = window.top.document.createElement("canvas");
+    canvas.width  = 128;
+    canvas.height = 128;
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.save();
+    context.fillStyle = '#FF0000';
+    context.lineWidth = 0.846;
+    context.beginPath();
+    context.moveTo(6.72, 0.422);
+    context.lineTo(17.28, 0.422);
+    context.bezierCurveTo(18.553, 0.422, 19.577, 1.758, 19.577, 3.415);
+    context.lineTo(19.577, 10.973);
+    context.bezierCurveTo(19.577, 12.63, 18.553, 13.966, 17.282, 13.966);
+    context.lineTo(14.386, 14.008);
+    context.lineTo(11.826, 23.578);
+    context.lineTo(9.614, 14.008);
+    context.lineTo(6.719, 13.965);
+    context.bezierCurveTo(5.446, 13.983, 4.422, 12.629, 4.422, 10.972);
+    context.lineTo(4.422, 3.416);
+    context.bezierCurveTo(4.423, 1.76, 5.447, 0.423, 6.718, 0.423);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.restore();
+    context.font = '400 48px "Font Awesome 5 Free"';
+    // context.font = '48px FontAwesome';
+    context.fillStyle = '#00FF00';
+    context.fillStyle = "red";
+    context.strokeText(unicode, 45, 45);
+    context.fillText(unicode, 45, 45);
+
+    return canvas.toDataURL( "image/jpeg" , 1.0 );
+}
+
 const buildPoint = function buildPoint(poi, style) {
-    const image = ('icon' in poi)
-        ? ((typeof poi.icon === 'string') ? poi.icon : poi.icon.src)
-        : this.pinBuilder.fromMakiIconId(
-            style.fontSymbol.glyph || 'star',
-            style.fontSymbol.color || Color.GREEN,
-            style.fontSymbol.size || 48);
+    let image;
+    if  ('icon' in poi) {
+        image = ((typeof poi.icon === 'string') ? poi.icon : poi.icon.src)
+    } else {
+        style.fontSymbol.glyph = style.fontSymbol.glyph || 'fa-star';
+        style.fontSymbol.color = style.fontSymbol.color || Color.GREEN;
+        style.fontSymbol.size = style.fontSymbol.size || 48;
+        
+        if (style.fontSymbol.glyph.startsWith('fa-')) {
+            image = fontAwesomeIcon.call(this, style.fontSymbol);
+        } else {
+            image = this.pinBuilder.fromMakiIconId(
+                style.fontSymbol.glyph,
+                style.fontSymbol.color,
+                style.fontSymbol.size);
+        }
+    }
+
 
     return {
         id: poi.id,
