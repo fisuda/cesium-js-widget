@@ -362,13 +362,33 @@ const removePoi = function removePoi(poi) {
 }
 
 const fontAwesomeIcon = function fontAwesomeIcon(style) {
+    style.glyph = 'fa-utensils';
     const unicode = this.glyphTable[style.glyph];
 
     const canvas = window.top.document.createElement("canvas");
-    canvas.width  = 128;
-    canvas.height = 128;
+    canvas.width  = 56;
+    canvas.height = 56;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
+
+    /*
+    this.radius_ = 20;
+    const c = 1;
+    const w = 1;
+    const s = 5;
+    context.beginPath();
+    context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
+    context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
+    context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
+    context.fill();
+    context.fillStyle = "red";
+    context.beginPath();
+    context.moveTo(75, 50);
+    context.lineTo(100, 75);
+    context.lineTo(100, 25);
+    context.fill();
+    */
+    /*
     context.save();
     context.fillStyle = '#FF0000';
     context.lineWidth = 0.846;
@@ -389,14 +409,29 @@ const fontAwesomeIcon = function fontAwesomeIcon(style) {
     context.fill();
     context.stroke();
     context.restore();
-    context.font = '400 48px "Font Awesome 5 Free"';
-    // context.font = '48px FontAwesome';
-    context.fillStyle = '#00FF00';
-    context.fillStyle = "red";
-    context.strokeText(unicode, 45, 45);
-    context.fillText(unicode, 45, 45);
+    */
+    // context.arc(24, 24, 22, 0, 360, false);
+    context.beginPath();
+    context.arc(24, 24, 22,  25 * Math.PI / 180,  155 * Math.PI / 180, true);
+    context.moveTo(3.6, 33.2);
+    context.lineTo (24, 54);
+    context.lineTo(44.4, 33.2);
+    context.fillStyle = "blue";
+    context.fill();
+    context.strokeStyle = "white" ;
+    context.lineWidth = 4;
+    context.stroke();
 
-    return canvas.toDataURL( "image/jpeg" , 1.0 );
+    context.font = '600 24px "Font Awesome 5 Free"';
+    // context.font = '48px FontAwesome';
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = '#00FF00';
+    context.fillStyle = "white";
+    // context.strokeText(unicode, 24, 24);
+    context.fillText(unicode, 24, 24);
+
+    return canvas.toDataURL( "image/png" , 1.0 );
 }
 
 const buildPoint = function buildPoint(poi, style) {
