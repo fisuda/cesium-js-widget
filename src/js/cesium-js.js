@@ -362,73 +362,69 @@ const removePoi = function removePoi(poi) {
 }
 
 const fontAwesomeIcon = function fontAwesomeIcon(style) {
-    style.glyph = 'fa-utensils';
-    const unicode = this.glyphTable[style.glyph];
+    style.glyph = style.glyph || 'fa-utensils';
+    style.form = style.form || '';
+    const size = style.size || 48;
 
     const canvas = window.top.document.createElement("canvas");
     canvas.width  = 56;
     canvas.height = 56;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
+    const unicode = this.glyphTable[style.glyph];
 
-    /*
-    this.radius_ = 20;
-    const c = 1;
-    const w = 1;
-    const s = 5;
-    context.beginPath();
-    context.arc ( c, c -0.4*this.radius_, 0.6*this.radius_, 0.15*Math.PI, 0.85*Math.PI, true);
-    context.lineTo ( c-0.89*0.05*s, (0.95+0.45*0.05)*s+w);
-    context.arc ( c, 0.95*s+w, 0.05*s, 0.85*Math.PI, 0.15*Math.PI, true);
-    context.fill();
-    context.fillStyle = "red";
-    context.beginPath();
-    context.moveTo(75, 50);
-    context.lineTo(100, 75);
-    context.lineTo(100, 25);
-    context.fill();
-    */
-    /*
-    context.save();
-    context.fillStyle = '#FF0000';
-    context.lineWidth = 0.846;
-    context.beginPath();
-    context.moveTo(6.72, 0.422);
-    context.lineTo(17.28, 0.422);
-    context.bezierCurveTo(18.553, 0.422, 19.577, 1.758, 19.577, 3.415);
-    context.lineTo(19.577, 10.973);
-    context.bezierCurveTo(19.577, 12.63, 18.553, 13.966, 17.282, 13.966);
-    context.lineTo(14.386, 14.008);
-    context.lineTo(11.826, 23.578);
-    context.lineTo(9.614, 14.008);
-    context.lineTo(6.719, 13.965);
-    context.bezierCurveTo(5.446, 13.983, 4.422, 12.629, 4.422, 10.972);
-    context.lineTo(4.422, 3.416);
-    context.bezierCurveTo(4.423, 1.76, 5.447, 0.423, 6.718, 0.423);
-    context.closePath();
-    context.fill();
-    context.stroke();
-    context.restore();
-    */
-    // context.arc(24, 24, 22, 0, 360, false);
-    context.beginPath();
-    context.arc(24, 24, 22,  25 * Math.PI / 180,  155 * Math.PI / 180, true);
-    context.moveTo(3.6, 33.2);
-    context.lineTo (24, 54);
-    context.lineTo(44.4, 33.2);
-    context.fillStyle = "blue";
-    context.fill();
-    context.strokeStyle = "white" ;
-    context.lineWidth = 4;
-    context.stroke();
+    switch (style.form) {
+    case 'icon':
+        context.font = '600 32px "Font Awesome 5 Free"';
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillStyle = "white";
+        context.fillText(unicode, 24, 24);
+        context.font = '600 24px "Font Awesome 5 Free"';
+        context.fillStyle = "blue";
+        context.fillText(unicode, 24, 24);
+        return canvas.toDataURL( "image/png" , 1.0 );
+    case 'circle':
+        canvas.width = size;
+        canvas.height = size;
+        context.arc(size / 2, size /2 , size / 2, 0, 360, false);
+        context.fillStyle = "blue";
+        context.fill();
+        context.strokeStyle = "white" ;
+        context.lineWidth = 4;
+        context.stroke();
+        break;
+    case 'box':
+        canvas.width = size;
+        canvas.height = size;
+        context.beginPath();
+        context.moveTo(2,2);
+        context.lineTo(size - 2, 2);
+        context.lineTo(size - 2, size -2);
+        context.lineTo(2, size -2);
+        context.closePath();
+        context.fillStyle = "blue";
+        context.fill();
+        context.strokeStyle = "white" ;
+        context.lineWidth = 4;
+        context.stroke();
+        break;
+    default:
+        context.beginPath();
+        context.arc(24, 24, 22,  0.2* Math.PI,  0.8 * Math.PI, true);
+        context.lineTo(24, 54);
+        context.closePath();
+        context.fillStyle = "blue";
+        context.fill();
+        context.strokeStyle = "white" ;
+        context.lineWidth = 4;
+        context.stroke();
+    }
 
     context.font = '600 24px "Font Awesome 5 Free"';
-    // context.font = '48px FontAwesome';
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.fillStyle = '#00FF00';
     context.fillStyle = "white";
-    // context.strokeText(unicode, 24, 24);
     context.fillText(unicode, 24, 24);
 
     return canvas.toDataURL( "image/png" , 1.0 );
