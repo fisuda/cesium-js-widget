@@ -38,6 +38,7 @@ import { JapanGSITerrainProvider, JapanGSIImageryProvider } from '@lets-fiware/c
 
 export default function CesiumJs() {
     this.pois = {};
+    this.faMarkerCache = {};
     this.queue = [];
     this.executingCmd = '';
     this.waiting = false;
@@ -361,73 +362,116 @@ const removePoi = function removePoi(poi) {
     }
 }
 
-const fontAwesomeIcon = function fontAwesomeIcon(style) {
-    style.glyph = style.glyph || 'fa-utensils';
-    style.form = style.form || '';
-    const size = style.size || 48;
+const fontAwesomeIcon = function fontAwesomeIcon(fontSymbol) {
+    const glyph = fontSymbol.glyph || 'fa-star';
+    let form = fontSymbol.form || 'marker';
+    const size = fontSymbol.size || 16;
+    const fill = fontSymbol.fill || 'blue';
+    const stroke = fontSymbol.stroke || 'white';
+    let color = fontSymbol.color || stroke;
+    const strokeWidth = fontSymbol.strokeWidth || 3;
+    const radius = fontSymbol.radius || (size / 2) + strokeWidth + size * 0.4;
+    const unicode = this.glyphTable[glyph];
+    if (typeof unicode === 'undefined') {
+        form = '';
+    }
+    const hash = glyph + form + size + fill + stroke + color + strokeWidth + radius + unicode;
+    if (hash in this.faMarkerCache) {
+        return this.faMarkerCache[hash];
+    }
 
-    const canvas = window.top.document.createElement("canvas");
-    canvas.width  = 56;
-    canvas.height = 56;
+    const canvas = window.top.document.createElement('canvas');
+    canvas.width  = radius * 2;
+    canvas.height = radius * 2;
+
     const context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    const unicode = this.glyphTable[style.glyph];
 
-    switch (style.form) {
+    switch (form) {
     case 'icon':
-        context.font = '600 32px "Font Awesome 5 Free"';
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.fillStyle = "white";
-        context.fillText(unicode, 24, 24);
-        context.font = '600 24px "Font Awesome 5 Free"';
-        context.fillStyle = "blue";
-        context.fillText(unicode, 24, 24);
-        return canvas.toDataURL( "image/png" , 1.0 );
+        const size2 = size + strokeWidth * 2; 
+        context.font = `600 ${size2}px "Font Awesome 5 Free"`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = stroke;
+        context.fillText(unicode, radius, radius);
+        if (stroke == color) {
+            color = fill;
+        }
+        break;
     case 'circle':
-        canvas.width = size;
-        canvas.height = size;
-        context.arc(size / 2, size /2 , size / 2, 0, 360, false);
-        context.fillStyle = "blue";
+        context.arc(radius, radius , radius - strokeWidth - 0.5, 0, 360, false);
+        context.fillStyle = fill;
         context.fill();
-        context.strokeStyle = "white" ;
-        context.lineWidth = 4;
+        context.strokeStyle = stroke;
+        context.lineWidth = strokeWidth;
         context.stroke();
         break;
     case 'box':
-        canvas.width = size;
-        canvas.height = size;
+        const s = strokeWidth + 0.5
         context.beginPath();
-        context.moveTo(2,2);
-        context.lineTo(size - 2, 2);
-        context.lineTo(size - 2, size -2);
-        context.lineTo(2, size -2);
+        context.moveTo(s, s);
+        context.lineTo(radius * 2 - s, s);
+        context.lineTo(radius * 2 - s, radius * 2 - s);
+        context.lineTo(s, radius * 2 - s);
         context.closePath();
-        context.fillStyle = "blue";
+        context.fillStyle = fill;
         context.fill();
-        context.strokeStyle = "white" ;
-        context.lineWidth = 4;
+        context.strokeStyle = stroke;
+        context.lineWidth = strokeWidth;
         context.stroke();
         break;
-    default:
+    case 'marker':
+        canvas.height = canvas.height * 1.2;
         context.beginPath();
-        context.arc(24, 24, 22,  0.2* Math.PI,  0.8 * Math.PI, true);
-        context.lineTo(24, 54);
+        context.arc(radius, radius, radius - strokeWidth - 0.5,  0.2 * Math.PI,  0.8 * Math.PI, true);
+        context.lineTo(radius, canvas.height - 0.5);
         context.closePath();
-        context.fillStyle = "blue";
+        context.fillStyle = fill;
         context.fill();
-        context.strokeStyle = "white" ;
-        context.lineWidth = 4;
+        context.strokeStyle = stroke;
+        context.lineWidth = strokeWidth;
         context.stroke();
+        break;
+    default: // fallback when unicode is 'undefined'
+        if ('__default' in this.faMarkerCache) {
+            return this.faMarkerCache['__default'];
+        }
+        const r = 12;
+        canvas.width = r * 2 + 1;
+        canvas.height = r * 3.2 + 1;
+        context.beginPath();
+        context.arc(r, r, r, 0.165 * Math.PI, 0.835 * Math.PI, true);
+        context.lineTo(r, canvas.height);
+        context.closePath();
+        context.fillStyle = 'rgb(234, 85, 80)';
+        context.fill();
+
+        context.beginPath();
+        context.arc(r, r, r - 1, 0.165 * Math.PI, 0.835 * Math.PI, true);
+        context.lineTo(r, canvas.height - 1);
+        context.closePath();
+        context.strokeStyle = 'rgb(117, 42, 40)';
+        context.lineWidth = 1;
+        context.stroke();
+
+        context.beginPath();
+        context.arc(r, r, r * 0.4, 0, 2 * Math.PI, true);
+        context.closePath();
+        context.fillStyle = 'rgb(117, 42, 40)';
+        context.fill();
+
+        this.faMarkerCache['__default'] = canvas.toDataURL('image/png', 1.0);
+        return this.faMarkerCache['__default'];
     }
 
-    context.font = '600 24px "Font Awesome 5 Free"';
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillStyle = "white";
-    context.fillText(unicode, 24, 24);
+    context.font = `600 ${size}px "Font Awesome 5 Free"`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = color;
+    context.fillText(unicode, radius, radius);
 
-    return canvas.toDataURL( "image/png" , 1.0 );
+    this.faMarkerCache[hash] = canvas.toDataURL('image/png', 1.0);
+    return this.faMarkerCache[hash];
 }
 
 const buildPoint = function buildPoint(poi, style) {
@@ -435,20 +479,24 @@ const buildPoint = function buildPoint(poi, style) {
     if  ('icon' in poi) {
         image = ((typeof poi.icon === 'string') ? poi.icon : poi.icon.src)
     } else {
-        style.fontSymbol.glyph = style.fontSymbol.glyph || 'fa-star';
-        style.fontSymbol.color = style.fontSymbol.color || Color.GREEN;
-        style.fontSymbol.size = style.fontSymbol.size || 48;
-        
+        if (style.fontSymbol == null) {
+            style.fontSymbol = {};
+        }
+        if (typeof style.fontSymbol === 'string') {
+            style.fontSymbol = {"glyph":  style.fontSymbol};
+        }
         if (style.fontSymbol.glyph.startsWith('fa-')) {
             image = fontAwesomeIcon.call(this, style.fontSymbol);
         } else {
+            style.fontSymbol.glyph = style.fontSymbol.glyph || 'star';
+            style.fontSymbol.color = style.fontSymbol.color || Color.GREEN;
+            style.fontSymbol.size = style.fontSymbol.size || 48;
             image = this.pinBuilder.fromMakiIconId(
                 style.fontSymbol.glyph,
                 style.fontSymbol.color,
                 style.fontSymbol.size);
         }
     }
-
 
     return {
         id: poi.id,
